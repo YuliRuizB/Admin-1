@@ -1,0 +1,195 @@
+<nz-drawer [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" nzTitle="Alertas" (nzOnClose)="close()">
+  <div class="m-t-40">
+    <div class="overflow-y-auto p-l-10 p-t-15">
+      <nz-timeline>
+        <nz-timeline-item *ngFor="let item of activityList" [nzDot]="dotTemplate">
+          <div class="m-l-20">
+            <h5 class="m-b-5">{{item.studentName}}</h5>
+            <p class="m-b-0">
+              <span class="font-weight-semibold">{{ item.vehicle }} - {{ item.route }}</span>
+              <span class="m-l-5"> {{item.studentId}}</span>
+            </p>
+            <span class="text-muted font-size-13">
+              <i nz-icon nzType="clock-circle" theme="outline"></i>
+              <span class="m-l-5">{{formatDate(item.created)}}</span>
+            </span>
+          </div>
+          <ng-template #dotTemplate>
+            <div class="font-size-20 p-5">
+              <i *ngIf="item.type == 'access'" class="text-success" nz-icon nzType="check" theme="outline"></i>
+              <i *ngIf="item.type == 'Attached file'" class="text-info" nz-icon nzType="paper-clip" theme="outline"></i>
+              <i *ngIf="item.type == 'Commented'" class="text-info" nz-icon nzType="message" theme="outline"></i>
+              <i *ngIf="item.type == 'duplicate'" class="text-danger" nz-icon nzType="close-circle" theme="outline"></i>
+            </div>
+          </ng-template>
+        </nz-timeline-item>
+      </nz-timeline>
+    </div>
+  </div>
+</nz-drawer>
+
+<div nz-row [nzGutter]="8">
+  <div nz-col nzSpan="8">
+
+    <nz-card style="width:100%;" nzTitle="Programación ({{ date | date: 'mediumDate' }} )" [nzExtra]="extraTemplate">
+      <nz-calendar [nzFullscreen]="false" (nzSelectChange)="onValueChange($event)"
+        (nzPanelChange)="onPanelChange($event)"></nz-calendar>
+    </nz-card>
+    <ng-template #extraTemplate>
+      <button nz-button nzNoAnimation nz-dropdown [nzDropdownMenu]="menu" style="border: none; padding: 0">
+        <i nz-icon nzType="ellipsis" nzTheme="outline" style="font-size: 20px; vertical-align: top;"></i>
+      </button>
+      <!-- <button nz-button nz-dropdown [nzDropdownMenu]="menu"><i nz-icon nzType="ellipsis"></i></button> -->
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="getAssignments()">
+            Ver asignaciones para {{ date | date: 'mediumDate' }}
+          </li>
+        </ul>
+      </nz-dropdown-menu>
+    </ng-template>
+
+  </div>
+  <div nz-col nzSpan="16">
+  </div>
+</div>
+
+<nz-card style="width:100%;" [nzBodyStyle]="{ 'padding': '0px' }" nzTitle="Programación {{ numAssingPro }}">
+  <div class="container">
+    <div class="row">
+      <div class="col" style="margin-top:5px">
+        <input type="text" style="margin-left: 20px; margin-top:5px" (input)="onQuickFilterDetail()" id="filterDetail" placeholder="Filtrar por..." />
+      </div>
+      <div class="col">     
+      </div>
+      <div class="col">
+        <button nz-button nzType="primary" (click)="refreshTable()"  style="margin-top:5px; display: block; margin-left: auto; margin-right: 0;">Actualizar</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <ag-grid-angular #agGrid style="width: 100%; height: 450px;" class="ag-theme-material" [rowData]="rowData"
+      [rowSelection]="rowSelectionEdit" (gridReady)="onGridReady($event)" [columnDefs]="columnFleetDefsProgram"
+      [defaultColDef]="columnProgram" [groupIncludeFooter]="true" (selectionChanged)="onSelectionChangedEdit($event)"
+      [sideBar]="false">
+    </ag-grid-angular>
+  </div>
+
+</nz-card>
+
+<nz-modal [(nzVisible)]="isAssignmentsModalVisible" nzTitle="Asignaciones {{ date | date: 'mediumDate' }}"
+  nzWidth="1000px" (nzOnCancel)="handleCancel()" [nzFooter]="modalFooter">
+  <div>
+    <div class="row" style="margin-bottom: 5px;">
+      <div class="col-">
+        Asignaciones pendientes {{ numAssing }}
+      </div>
+      <div  style="margin-left: 26px" class="col-">
+        <a nz-dropdown [nzDropdownMenu]="menuClient"> Cliente
+          <i nz-icon nzType="down"></i>
+        </a>
+        <a nz-dropdown [nzDropdownMenu]="menuRoute"> Ruta
+          <i nz-icon nzType="down"></i>
+        </a>
+        <nz-dropdown-menu #menuClient="nzDropdownMenu">
+          <ul nz-menu>
+            <li nz-menu-item *ngFor="let cust of filterCustomer" (click)="onSelect(cust)">{{cust.customerName}}</li>
+          </ul>
+        </nz-dropdown-menu>
+        <nz-dropdown-menu #menuRoute="nzDropdownMenu">
+          <ul nz-menu>
+            <li nz-menu-item *ngFor="let routes of filterRoute" (click)="onSelectRoute(routes)">{{routes.routeName}}</li>
+          </ul>
+        </nz-dropdown-menu>
+      </div>
+      <div style="margin-left: 33px;"  class="col-">
+        Ruta: {{routePath}}
+      </div>
+      <div style="margin-left: 33px;" class="col-">
+        <button nz-button nzType="primary" (click)="handleSearch()"><i nz-icon nzType="search"></i>
+          Buscar</button>
+      </div>
+    </div>
+    <div class="row">
+    </div>
+    <div style="margin-bottom: 5px; margin-left: -10px; " >
+      <div>
+      <input type="text" (input)="onQuickFilterChanged()" id="quickFilter" placeholder="Filtrar por..." />
+    </div>
+    <div>
+      Registros seleccionados {{ regSelected }}
+    </div>
+    <div>
+      {{ regFound }}
+    </div>
+    </div>
+    <div>
+      <ag-grid-angular #agGridProg style="width: 100%; height: 450px;" class="ag-theme-material"
+        [columnDefs]="columnFleetDefsAsign" [rowData]="rowDataAsignModal" [rowSelection]="rowSelection"
+        [suppressRowClickSelection]="true"
+        [defaultColDef]="columnAsign" [groupIncludeFooter]="true" (gridReady)="onGridReadyP($event)"
+        (selectionChanged)="onSelectionChanged($event)" [sideBar]="false"[suppressChangeDetection]="false">
+      </ag-grid-angular>
+    </div>
+    {{this.arrDrivers.sort()}}
+    {{this.arrVehicle.sort()}}
+  </div>
+  <ng-template #modalFooter>
+    <button nz-button nzType="primary" (click)="handleOk()" [nzLoading]="isConfirmLoading">Programar</button>
+    <button nz-button nzType="default" (click)="handleCancel()">Cancelar</button> 
+  </ng-template>
+</nz-modal>
+<nz-modal [(nzVisible)]="isEditModalVisible" nzTitle="Editar Programacion ( {{ date | date: 'mediumDate' }} )"
+  nzWidth="500px" (nzOnCancel)="handleCancelEdit()" [nzFooter]="modalFooterEdit">
+  <div>
+    <form nz-form [formGroup]="signupForm">
+      <nz-form-item>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="customerName">Cliente</nz-form-label>
+        <nz-form-control  [nzSm]="16" [nzXs]="24" >
+          <input [disabled]="true" type="text" nz-input formControlName="customerName" id="customerName"/>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="routeName">Ruta</nz-form-label>
+        <nz-form-control [nzSm]="16" [nzXs]="24" >
+          <input [disabled]="true" type="text" nz-input formControlName="routeName" id="routeName"/>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="driver">Conductor</nz-form-label>
+        <nz-form-control [nzSm]="16" [nzXs]="24" >
+          <button nz-button nz-dropdown [nzDropdownMenu]="menuDriverEdit">
+            - Seleccionar - 
+            <i nz-icon nzType="down"></i>
+          </button>
+          <nz-dropdown-menu #menuDriverEdit="nzDropdownMenu"  >
+            <ul nz-menu>
+              <li *ngFor="let driver of arrDriversEdit" (click)="driverSet(driver)"  nz-menu-item>{{driver.displayName}}</li>
+            </ul>
+          </nz-dropdown-menu>
+          <input [disabled]="true" type="text"  nz-input formControlName="driver" id="driverEditInput"/>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="vehicleEdit">Vehículo</nz-form-label>
+        <nz-form-control [nzSm]="16" [nzXs]="24" >
+          <button nz-button nz-dropdown [nzDropdownMenu]="menuVehicleEdit">
+            - Seleccionar - 
+            <i nz-icon nzType="down"></i>
+          </button>
+          <nz-dropdown-menu #menuVehicleEdit="nzDropdownMenu" >
+            <ul nz-menu>
+              <li *ngFor="let vehicle of arrVehicleEdit" (click)="vehicleSet(vehicle)" nz-menu-item>{{vehicle.name}}</li>
+            </ul>
+          </nz-dropdown-menu>
+          <input [disabled]="true" type="text" nz-input formControlName="vehicleName" id="vehicleEditInput"/> 
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </div>
+  <ng-template #modalFooterEdit>
+    <button nz-button nzType="primary" (click)="handleOKEdit()" [nzLoading]="isConfirmLoading">Aceptar</button>
+    <button nz-button nzType="default" (click)="handleCancelEdit()">Cancelar</button>
+  </ng-template>
+</nz-modal>
+
