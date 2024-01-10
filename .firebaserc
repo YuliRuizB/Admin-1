@@ -1,0 +1,22 @@
+{
+  "projects": {
+    "default": "Bus2U-QA",
+    "adminbus2u": "bus2u-qa-391716"
+  },
+  "targets": {
+    "bus2u-834e8": {
+      "hosting": {
+        "admin-bus2u-dev": [
+          "admin-bus2u-dev"
+        ]
+      }
+    },
+    "Bus2U-QA": {
+      "hosting": {
+        "enlink": [
+          "bus2u-qa-391716"
+        ]
+      }
+    }
+  }
+}
